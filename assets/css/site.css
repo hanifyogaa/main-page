@@ -187,6 +187,45 @@ p { margin: 0 0 1em; }
 .guide-nav-card b { display: block; font-weight: 600; }
 @media (max-width: 640px) { .checklist ul { columns: 1; } }
 
+/* Guide screenshots are shown whole (the overview pages use short, cropped previews). */
+.steps--guide figure.shot button { max-height: none; }
+.steps--guide figure.shot img { max-height: none; object-fit: contain; }
+
+/* ---------- glass accents: frosted panels over soft colour orbs ---------- */
+body::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(560px 560px at 8% 14%, rgba(16, 185, 129, .34), transparent 70%),
+    radial-gradient(520px 520px at 92% 12%, rgba(56, 189, 248, .30), transparent 70%),
+    radial-gradient(520px 520px at 4% 62%, rgba(56, 189, 248, .20), transparent 70%),
+    radial-gradient(600px 600px at 96% 70%, rgba(16, 185, 129, .24), transparent 70%),
+    radial-gradient(520px 520px at 50% 100%, rgba(16, 185, 129, .18), transparent 70%);
+}
+.site-header {
+  background: rgba(255, 255, 255, .62); -webkit-backdrop-filter: blur(16px) saturate(170%); backdrop-filter: blur(16px) saturate(170%);
+  border-bottom-color: rgba(255, 255, 255, .7); box-shadow: 0 6px 24px rgba(11, 107, 58, .06);
+}
+.role-card, .quick li, .results li, .checklist, .guide-nav-card, .stages li, .toc, .faq details, .callout, .finder input[type="search"] {
+  background: rgba(255, 255, 255, .58); -webkit-backdrop-filter: blur(14px) saturate(165%); backdrop-filter: blur(14px) saturate(165%);
+  border: 1px solid rgba(255, 255, 255, .78); box-shadow: 0 8px 28px rgba(11, 107, 58, .09), inset 0 1px 0 rgba(255, 255, 255, .65);
+}
+.callout.note { background: rgba(236, 253, 243, .62); border-color: rgba(120, 200, 160, .65); }
+.callout.warn { background: rgba(255, 251, 235, .72); border-color: rgba(246, 215, 124, .8); }
+.video-card.soon { -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+.role-card:hover, .quick li:hover, .results li:hover, .guide-nav-card:hover { background: rgba(255, 255, 255, .8); border-color: rgba(16, 160, 90, .55); }
+@media (prefers-reduced-motion: no-preference) {
+  .role-card, .quick li, .guide-nav-card { transition: transform .2s, background .2s, border-color .2s, box-shadow .2s; }
+  .role-card:hover, .quick li:hover, .guide-nav-card:hover { transform: translateY(-2px); }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .site-header, .role-card, .quick li, .results li, .checklist, .guide-nav-card, .stages li, .toc, .faq details, .callout, .finder input[type="search"] { background: rgba(255, 255, 255, .94); }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .site-header, .role-card, .quick li, .results li, .checklist, .guide-nav-card, .stages li, .toc, .faq details, .callout, .finder input[type="search"] {
+    background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none;
+  }
+}
+
 /* ---------- role pages ---------- */
 .layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 40px; align-items: start; }
 .toc { position: sticky; top: 88px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
