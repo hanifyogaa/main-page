@@ -167,7 +167,23 @@ p { margin: 0 0 1em; }
 .flow { max-width: 760px; color: var(--muted); }
 .guide-actions { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
 .btn svg { margin-right: 8px; flex-shrink: 0; }
-.guide-body { max-width: 860px; padding-bottom: 24px; }
+.guide-body { padding-bottom: 24px; }
+.guide-hero { display: grid; gap: 8px 36px; grid-template-columns: minmax(0, 1fr); align-items: start; }
+.guide-hero-side {
+  padding: 20px; border-radius: var(--radius); margin: 8px 0 0;
+  background: rgba(255, 255, 255, .58); -webkit-backdrop-filter: blur(14px) saturate(165%); backdrop-filter: blur(14px) saturate(165%);
+  border: 1px solid rgba(255, 255, 255, .78); box-shadow: 0 8px 28px rgba(11, 107, 58, .09), inset 0 1px 0 rgba(255, 255, 255, .65);
+}
+.guide-meta { margin: 0 0 12px; color: var(--muted); }
+.jump-h { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 18px 0 0; }
+.jump { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 8px; }
+.jump a { display: grid; place-items: center; min-height: 44px; border-radius: 12px; text-decoration: none; font-weight: 600; color: var(--brand); background: rgba(255, 255, 255, .7); border: 1px solid rgba(255, 255, 255, .85); }
+.jump a:hover { background: var(--brand-100); }
+@media (min-width: 900px) {
+  .guide-hero { grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr); }
+  .guide-hero-side { margin-top: 30px; }
+  .guide-body .checklist ul { columns: 3; }
+}
 .quick span .nb, .guide-card span .nb { display: inline; font-size: inherit; color: inherit; white-space: nowrap; }
 .guide-body .callout { margin-bottom: 14px; }
 .checklist { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 24px; margin: 18px 0 30px; box-shadow: var(--shadow); }
@@ -188,6 +204,9 @@ p { margin: 0 0 1em; }
 @media (max-width: 640px) { .checklist ul { columns: 1; } }
 
 /* Guide screenshots are shown whole (the overview pages use short, cropped previews). */
+.steps--guide .step > div { display: contents; }
+.steps--guide .step > div > p { max-width: 980px; }
+.steps--guide figure.shot { grid-column: 1 / -1; }
 .steps--guide figure.shot button { max-height: none; }
 .steps--guide figure.shot img { max-height: none; object-fit: contain; }
 

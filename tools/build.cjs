@@ -187,13 +187,20 @@ function guidePage(g) {
     description: `${g.summary} Panduan bergambar ${p.steps.length} langkah, dapat diunduh sebagai PDF.`,
     current: 'mahasiswa/',
     body: `
-<section class="hero hero--left"><div class="wrap">
-  <nav class="crumbs" aria-label="Jejak halaman"><a href="../../">Mahasiswa</a> / <a href="../../#tata-cara">Tata cara</a> / <span aria-current="page">${esc(g.title)}</span></nav>
-  <span class="eyebrow">Tata cara &middot; ${esc(label)}</span>
-  <h1>${esc(g.title)}</h1>
-  <p class="lead">${inline(p.forWho)}</p>
-  ${p.flow ? `<p class="flow"><b>Alur:</b> ${inline(p.flow)}</p>` : ''}
-  <div class="guide-actions"><a class="btn" style="background:var(--brand);color:#fff" href="${R3}${pdfRel}" download>${ICON.download}Unduh PDF (${pdfMb} MB)</a></div>
+<section class="hero hero--left"><div class="wrap guide-hero">
+  <div class="guide-hero-main">
+    <nav class="crumbs" aria-label="Jejak halaman"><a href="../../">Mahasiswa</a> / <a href="../../#tata-cara">Tata cara</a> / <span aria-current="page">${esc(g.title)}</span></nav>
+    <span class="eyebrow">Tata cara &middot; ${esc(label)}</span>
+    <h1>${esc(g.title)}</h1>
+    <p class="lead">${inline(p.forWho)}</p>
+    ${p.flow ? `<p class="flow"><b>Alur:</b> ${inline(p.flow)}</p>` : ''}
+  </div>
+  <aside class="guide-hero-side" aria-label="Ringkasan panduan">
+    <p class="guide-meta"><b>${p.steps.length} langkah</b> &middot; PDF ${pdfMb} MB</p>
+    <a class="btn" style="background:var(--brand);color:#fff" href="${R3}${pdfRel}" download>${ICON.download}Unduh PDF</a>
+    <h2 class="jump-h">Loncat ke langkah</h2>
+    <ol class="jump">${p.steps.map((_, i) => `<li><a href="#langkah-${i + 1}" aria-label="Langkah ${i + 1}">${i + 1}</a></li>`).join('')}</ol>
+  </aside>
 </div></section>
 <div class="wrap"><div class="guide-body">
   ${p.notes.map((n) => callout('note', inline(n))).join('')}
