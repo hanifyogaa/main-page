@@ -265,7 +265,7 @@ function page({ root, file, title, description, current, body, brand = 'merci' }
 ${body}
 </main>
 <footer class="site-footer"><div class="wrap">
-  <div>${footerLogo}<br>&copy; ${YEAR} Fakultas Rekayasa Industri, Telkom University.<br>Tangkapan layar memakai data contoh, bukan data mahasiswa atau dosen sebenarnya.</div>
+  <div>${footerLogo}<br>&copy; ${YEAR} Fakultas Rekayasa Industri, Telkom University.</div>
   <div>Tampilan MERCI dapat sedikit berbeda dari panduan ini seiring pembaruan.<br><a href="${root}bantuan/">Pertanyaan umum</a> &middot; <a data-onedesk-link href="#">Helpdesk OneDesk FRI</a><br><a data-merci-link href="#">MERCI (Tugas Akhir)</a> &middot; <a data-sofi-link href="#">SOFI (Sidang TA)</a> &middot; <a data-sijaki-link href="#">SIJAKI (Kerja Praktik)</a></div>
 </div></footer>
 <script src="${root}assets/js/config.js?v=${ver('assets/js/config.js')}"></script>
