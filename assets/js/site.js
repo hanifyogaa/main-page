@@ -318,6 +318,22 @@
     }
   }
 
+  /* "Tata cara lengkap" is a show/hide block: open it when a link points at it (or inside it). */
+  var tataCara = document.getElementById('tata-cara');
+  if (tataCara && tataCara.tagName === 'DETAILS') {
+    var openTataCara = function () {
+      if (!/^#tata-cara/.test(window.location.hash)) { return; }
+      tataCara.open = true;
+      var target = document.getElementById(window.location.hash.slice(1));
+      if (target) { target.scrollIntoView(); }
+    };
+    openTataCara();
+    window.addEventListener('hashchange', openTataCara);
+    [].forEach.call(document.querySelectorAll('a[href="#tata-cara"]'), function (a) {
+      a.addEventListener('click', function () { tataCara.open = true; });
+    });
+  }
+
   /* Screenshot lightbox. */
   var dialog = document.createElement('dialog');
   dialog.className = 'lightbox';

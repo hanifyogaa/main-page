@@ -187,28 +187,24 @@ function guidePage(g) {
     description: `${g.summary} Panduan bergambar ${p.steps.length} langkah, dapat diunduh sebagai PDF.`,
     current: 'mahasiswa/',
     body: `
-<section class="hero hero--left"><div class="wrap guide-hero">
-  <div class="guide-hero-main">
-    <nav class="crumbs" aria-label="Jejak halaman"><a href="../../">Mahasiswa</a> / <a href="../../#tata-cara">Tata cara</a> / <span aria-current="page">${esc(g.title)}</span></nav>
-    <span class="eyebrow">Tata cara &middot; ${esc(label)}</span>
-    <h1>${esc(g.title)}</h1>
-    <p class="lead">${inline(p.forWho)}</p>
-    ${p.flow ? `<p class="flow"><b>Alur:</b> ${inline(p.flow)}</p>` : ''}
-  </div>
-  <aside class="guide-hero-side" aria-label="Ringkasan panduan">
-    <p class="guide-meta"><b>${p.steps.length} langkah</b> &middot; PDF ${pdfMb} MB</p>
-    <a class="btn" style="background:var(--brand);color:#fff" href="${R3}${pdfRel}" download>${ICON.download}Unduh PDF</a>
-    <h2 class="jump-h">Loncat ke langkah</h2>
-    <ol class="jump">${p.steps.map((_, i) => `<li><a href="#langkah-${i + 1}" aria-label="Langkah ${i + 1}">${i + 1}</a></li>`).join('')}</ol>
-  </aside>
+<section class="hero hero--left"><div class="wrap">
+  <nav class="crumbs" aria-label="Jejak halaman"><a href="../../">Mahasiswa</a> / <a href="../../#tata-cara">Tata cara</a> / <span aria-current="page">${esc(g.title)}</span></nav>
+  <span class="eyebrow">Tata cara &middot; ${esc(label)}</span>
+  <h1>${esc(g.title)}</h1>
+  <p class="lead">${inline(p.forWho)}</p>
+  ${p.flow ? `<p class="flow"><b>Alur:</b> ${inline(p.flow)}</p>` : ''}
+  <div class="guide-actions"><a class="btn" style="background:var(--brand);color:#fff" href="${R3}${pdfRel}" download>${ICON.download}Unduh PDF (${pdfMb} MB)</a></div>
 </div></section>
-<div class="wrap"><div class="guide-body">
+<div class="wrap"><div class="layout">
+  <aside class="toc toc--steps" aria-label="Isi halaman"><h2>Isi halaman</h2><ol>${p.steps.map((s, i) => `<li><a href="#langkah-${i + 1}">${i + 1} &middot; ${esc(shorten(s.text.join(' ').replace(/\*\*/g, ''), 34))}</a></li>`).join('')}</ol></aside>
+  <div class="guide-body">
   ${p.notes.map((n) => callout('note', inline(n))).join('')}
   ${checklist}
   <ol class="steps steps--guide">${steps}</ol>
   ${p.after.map((a) => callout('note', `<b>${esc(a.heading)}.</b> ${inline(a.text.join(' '))}`)).join('')}
   ${p.closing.map((c) => callout('note', inline(c))).join('')}
   <nav class="guide-nav" aria-label="Panduan lainnya">${navCards.join('')}<a class="guide-nav-card" href="../../#tata-cara"><span>Kembali</span><b>Semua tata cara</b></a></nav>
+  </div>
 </div></div>`,
   });
 }
@@ -221,9 +217,11 @@ function tataCaraSection() {
       `<b>${esc(g.title).replace(/SK-TA/g, '<span class="nb">SK-TA</span>')}</b><span>${esc(g.summary).replace(/SK-TA/g, '<span class="nb">SK-TA</span>')}</span><em>${guideData[g.slug].steps.length} langkah &middot; ada PDF</em></a></li>`).join('');
     return `<h3 class="guides-h" id="tata-cara-${key}">${esc(label)}</h3><ul class="quick guides">${cards}</ul>`;
   }).join('');
-  return `<section class="section" id="tata-cara" aria-labelledby="tata-cara-h"><div class="wrap">
-  <div class="section-head"><h2 id="tata-cara-h">Tata cara lengkap</h2><p>Panduan bergambar langkah demi langkah untuk tiap jalur. Masing-masing bisa diunduh sebagai PDF.</p></div>
-  ${groups}
+  return `<section class="section" aria-labelledby="tata-cara-h"><div class="wrap">
+  <details class="tata-cara" id="tata-cara">
+    <summary><span><h2 id="tata-cara-h">Tata cara lengkap</h2><span class="tc-sub">${TATA.guides.length} panduan bergambar langkah demi langkah &middot; bisa diunduh sebagai PDF</span></span></summary>
+    ${groups}
+  </details>
 </div></section>`;
 }
 

@@ -168,22 +168,22 @@ p { margin: 0 0 1em; }
 .guide-actions { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
 .btn svg { margin-right: 8px; flex-shrink: 0; }
 .guide-body { padding-bottom: 24px; }
-.guide-hero { display: grid; gap: 8px 36px; grid-template-columns: minmax(0, 1fr); align-items: start; }
-.guide-hero-side {
-  padding: 20px; border-radius: var(--radius); margin: 8px 0 0;
-  background: rgba(255, 255, 255, .58); -webkit-backdrop-filter: blur(14px) saturate(165%); backdrop-filter: blur(14px) saturate(165%);
+.toc--steps { max-height: calc(100vh - 110px); overflow: auto; }
+.toc--steps a { padding: 9px 10px; line-height: 1.35; }
+@media (max-width: 900px) { .toc--steps { display: none; } }
+
+/* Show/hide block for the guide cards on the mahasiswa page. */
+.tata-cara > summary {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 44px; padding: 18px 22px; cursor: pointer; list-style: none;
+  border-radius: var(--radius); background: rgba(255, 255, 255, .58); -webkit-backdrop-filter: blur(14px) saturate(165%); backdrop-filter: blur(14px) saturate(165%);
   border: 1px solid rgba(255, 255, 255, .78); box-shadow: 0 8px 28px rgba(11, 107, 58, .09), inset 0 1px 0 rgba(255, 255, 255, .65);
 }
-.guide-meta { margin: 0 0 12px; color: var(--muted); }
-.jump-h { font-size: .8rem; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin: 18px 0 0; }
-.jump { list-style: none; margin: 10px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(44px, 1fr)); gap: 8px; }
-.jump a { display: grid; place-items: center; min-height: 44px; border-radius: 12px; text-decoration: none; font-weight: 600; color: var(--brand); background: rgba(255, 255, 255, .7); border: 1px solid rgba(255, 255, 255, .85); }
-.jump a:hover { background: var(--brand-100); }
-@media (min-width: 900px) {
-  .guide-hero { grid-template-columns: minmax(0, 1.7fr) minmax(300px, 1fr); }
-  .guide-hero-side { margin-top: 30px; }
-  .guide-body .checklist ul { columns: 3; }
-}
+.tata-cara > summary::-webkit-details-marker { display: none; }
+.tata-cara > summary::after { content: "+"; font-size: 1.6rem; line-height: 1; color: var(--brand); }
+.tata-cara[open] > summary::after { content: "–"; }
+.tata-cara > summary h2 { margin: 0; }
+.tc-sub { display: block; color: var(--muted); font-size: .95rem; margin-top: 2px; }
+.tata-cara[open] > summary { margin-bottom: 6px; }
 .quick span .nb, .guide-card span .nb { display: inline; font-size: inherit; color: inherit; white-space: nowrap; }
 .guide-body .callout { margin-bottom: 14px; }
 .checklist { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 24px; margin: 18px 0 30px; box-shadow: var(--shadow); }
@@ -191,8 +191,10 @@ p { margin: 0 0 1em; }
 .checklist p { color: var(--muted); font-size: .92rem; margin-bottom: 10px; }
 .checklist ul { margin: 0; padding-left: 1.2rem; columns: 2; column-gap: 32px; }
 .checklist li { margin-bottom: 6px; break-inside: avoid; }
-.steps--guide { margin: 28px 0; }
-.steps--guide .step p { color: var(--ink); }
+.steps.steps--guide { margin: 32px 0; gap: 56px; }
+.steps--guide .step { align-items: center; column-gap: 16px; row-gap: 18px; }
+.steps--guide .step::before { margin-top: 0; }
+.steps--guide .step p { color: var(--ink); margin: 0; }
 .guides-h { margin: 26px 0 0; }
 .quick em { display: block; margin-top: 6px; font-style: normal; font-size: .8rem; font-weight: 600; color: var(--brand); }
 .more { font-size: .92rem; margin: -4px 0 12px; }
