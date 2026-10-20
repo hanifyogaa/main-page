@@ -3,9 +3,13 @@
 // Edit TEXT here (or edit the generated HTML directly for a one-off fix, then mirror it here).
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const OUT = path.join(__dirname, '..');
 const YEAR = new Date().getFullYear();
+
+/** `?v=<content hash>` on css/js: nginx lets browsers cache those for a day, and this makes an edit show up immediately. */
+const ver = (rel) => crypto.createHash('sha1').update(fs.readFileSync(path.join(OUT, rel))).digest('hex').slice(0, 8);
 
 /** Addresses live in assets/js/config.js (single source); baked into the HTML so links work without JavaScript. */
 const SITE = new Function('window', fs.readFileSync(path.join(OUT, 'assets/js/config.js'), 'utf8') + '\nreturn window.SITE;')({});
@@ -87,7 +91,14 @@ const videoSection = (role, hintText) => `<section class="section" style="paddin
 </div></section>`;
 
 /* ---------- page shell ---------- */
-function page({ root, file, title, description, current, body }) {
+/** `brand: 'fri'` swaps the MERCI logo for the faculty logo (the home page covers Tugas Akhir in general, incl. SOFI). */
+function page({ root, file, title, description, current, body, brand = 'merci' }) {
+  const headerLogo = brand === 'fri'
+    ? `<a class="brand brand--fri" href="${root || './'}"><img src="${root}assets/img/fri-logo.webp" alt="Fakultas Rekayasa Industri, Telkom University" width="94" height="56"></a>`
+    : `<a class="brand" href="${root || './'}"><img src="${root}assets/img/merci-logo.png" alt="MERCI-FRI" width="146" height="34"><span>Fakultas Rekayasa Industri<br>Telkom University</span></a>`;
+  const footerLogo = brand === 'fri'
+    ? `<img class="fri" src="${root}assets/img/fri-logo.webp" alt="Fakultas Rekayasa Industri" width="107" height="64">`
+    : `<img src="${root}assets/img/merci-logo.png" alt="MERCI-FRI" width="111" height="26">`;
   const nav = [['mahasiswa/', 'Mahasiswa'], ['dosen/', 'Dosen'], ['bantuan/', 'Bantuan']]
     .map(([href, label]) => `<a href="${root}${href}"${current === href ? ' aria-current="page"' : ''}>${label}</a>`).join('');
   const html = `<!doctype html>
@@ -105,24 +116,24 @@ function page({ root, file, title, description, current, body }) {
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="${root}assets/css/site.css">
+<link rel="stylesheet" href="${root}assets/css/site.css?v=${ver('assets/css/site.css')}">
 </head>
 <body>
 <a class="skip-link" href="#isi">Lewati ke konten</a>
 <header class="site-header"><div class="wrap">
-  <a class="brand" href="${root || './'}"><img src="${root}assets/img/merci-logo.png" alt="MERCI-FRI" width="146" height="34"><span>Fakultas Rekayasa Industri<br>Telkom University</span></a>
+  ${headerLogo}
   <nav class="nav" aria-label="Menu utama">${nav}</nav>
 </div></header>
 <main id="isi">
 ${body}
 </main>
 <footer class="site-footer"><div class="wrap">
-  <div><img src="${root}assets/img/merci-logo.png" alt="MERCI-FRI" width="111" height="26"><br>&copy; ${YEAR} Fakultas Rekayasa Industri, Telkom University.<br>Tangkapan layar memakai data contoh, bukan data mahasiswa atau dosen sebenarnya.</div>
+  <div>${footerLogo}<br>&copy; ${YEAR} Fakultas Rekayasa Industri, Telkom University.<br>Tangkapan layar memakai data contoh, bukan data mahasiswa atau dosen sebenarnya.</div>
   <div>Tampilan MERCI dapat sedikit berbeda dari panduan ini seiring pembaruan.<br><a href="${root}bantuan/">Pertanyaan umum</a> &middot; <a data-onedesk-link href="#">Helpdesk OneDesk FRI</a><br><a data-merci-link href="#">MERCI (Tugas Akhir)</a> &middot; <a data-sofi-link href="#">SOFI (Sidang TA)</a> &middot; <a data-sijaki-link href="#">SIJAKI (Kerja Praktik)</a></div>
 </div></footer>
-<script src="${root}assets/js/config.js"></script>
-<script src="${root}assets/data/videos.js"></script>
-<script src="${root}assets/js/site.js" defer></script>
+<script src="${root}assets/js/config.js?v=${ver('assets/js/config.js')}"></script>
+<script src="${root}assets/data/videos.js?v=${ver('assets/data/videos.js')}"></script>
+<script src="${root}assets/js/site.js?v=${ver('assets/js/site.js')}" defer></script>
 </body>
 </html>
 `;
@@ -143,14 +154,17 @@ const SIDANG_TA_NOTE_DOSEN = callout('note',
    ====================================================================== */
 page({
   root: '', file: 'index.html',
-  title: 'Panduan MERCI-FRI — tutorial untuk mahasiswa dan dosen',
-  description: 'Panduan bergambar dan video memakai MERCI-FRI, sistem tingkat akhir Fakultas Rekayasa Industri Telkom University: SK-TA, Pengganti Sidang, Yudisium, SKL dan KHS.',
+  title: 'Panduan Tugas Akhir FRI — tutorial untuk mahasiswa dan dosen',
+  description: 'Panduan bergambar dan video Tugas Akhir Fakultas Rekayasa Industri Telkom University: SK-TA, Sidang TA di SOFI, serta Pengganti Sidang, Yudisium, SKL dan KHS di MERCI.',
   current: '',
+  brand: 'fri',
   body: `
 <section class="hero"><div class="wrap">
-  <span class="eyebrow">Panduan resmi &middot; tanpa login</span>
-  <h1>Belajar memakai <em>MERCI</em> dalam beberapa menit.</h1>
-  <p class="lead">Panduan bergambar dan video untuk mahasiswa tingkat akhir dan dosen Fakultas Rekayasa Industri, dari pengajuan SK-TA sampai unduh SKL &amp; KHS.</p>
+  <h1 class="typing-h1">
+    <span class="sr-only">Panduan Tugas Akhir untuk mahasiswa dan dosen FRI: SK-TA, Sidang TA, Pengganti Sidang, Yudisium, SKL dan KHS</span>
+    <span aria-hidden="true"><span class="t-lead">Panduan </span><span class="t-line"><span class="typed" data-typing='["Tugas Akhir","SK-TA","Sidang TA","Pengganti Sidang","Yudisium","SKL &amp; KHS"]'>Tugas Akhir</span><span class="cursor" hidden>|</span></span><span class="t-tail">untuk mahasiswa &amp; dosen FRI.</span></span>
+  </h1>
+  <p class="lead">Panduan bergambar dan video untuk mahasiswa tingkat akhir dan dosen: SK-TA, Sidang TA di SOFI, Pengganti Sidang, Yudisium, sampai mengunduh SKL &amp; KHS di MERCI. Terbuka untuk umum, tanpa login.</p>
   <div class="role-cards">
     <a class="role-card" href="mahasiswa/"><span class="icon">${ICON.cap}</span><h2>Saya mahasiswa</h2>
       <p>SK-TA, Pengganti Sidang, pendaftaran Yudisium, dan mengunduh SKL &amp; KHS.</p><span class="go">Buka panduan mahasiswa &rarr;</span></a>

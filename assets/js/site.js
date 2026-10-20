@@ -256,6 +256,50 @@
     input.addEventListener('input', function () { render(input.value); });
   }
 
+  /*
+   * Typing headline on the home page: type a word, hold it, delete it, next word (the same effect as SIJAKI's landing page).
+   * Without JavaScript, or with "reduce motion" on, the first word simply stays; a screen reader gets the full sentence
+   * from the visually hidden copy, so the animated part is aria-hidden.
+   */
+  var typed = document.querySelector('[data-typing]');
+  if (typed && !reduceMotion) {
+    var words = null;
+    try { words = JSON.parse(typed.getAttribute('data-typing')); } catch (err) { words = null; }
+    if (words && words.length) {
+      var cursor = typed.parentNode.querySelector('.cursor');
+      if (cursor) { cursor.hidden = false; }
+      var wi = 0;
+      var ci = words[0].length;
+      var deleting = false;
+      var timer = null;
+      var tick = function () {
+        var word = words[wi];
+        var delay;
+        if (!deleting) {
+          if (ci < word.length) { ci++; typed.textContent = word.slice(0, ci); delay = 60; }
+          else { deleting = true; delay = 2200; }
+        } else if (ci > 0) {
+          ci--; typed.textContent = word.slice(0, ci); delay = 35;
+        } else {
+          deleting = false; wi = (wi + 1) % words.length; delay = 300;
+        }
+        timer = window.setTimeout(tick, delay);
+      };
+      timer = window.setTimeout(tick, 1800);
+      /* Stop working while the headline is scrolled out of view. */
+      if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries) {
+          if (entries[0].isIntersecting) {
+            if (!timer) { timer = window.setTimeout(tick, 400); }
+          } else if (timer) {
+            window.clearTimeout(timer);
+            timer = null;
+          }
+        }).observe(typed.closest('h1'));
+      }
+    }
+  }
+
   /* Screenshot lightbox. */
   var dialog = document.createElement('dialog');
   dialog.className = 'lightbox';
