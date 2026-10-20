@@ -13,6 +13,9 @@ Situs statis tanpa login: HTML, CSS, dan sedikit JavaScript. Tidak ada PHP, data
 | `assets/js/config.js` | Pengaturan: alamat MERCI (`merciUrl`) dan helpdesk |
 | `tools/build.cjs` | Generator halaman (teks panduan ada di sini) |
 | `tools/optimize-shots.cjs` | Konversi tangkapan layar PNG ke WebP |
+| `tools/import-tata-cara.cjs`, `tools/tata-cara.config.cjs` | Impor 11 panduan terperinci (teks, PDF, gambar) dan daftar panduannya |
+| `content/tata-cara/` | Teks panduan terperinci (`.md`) dan ukuran gambarnya (`images.json`) |
+| `assets/pdf/` | PDF tiap panduan terperinci (untuk diunduh) |
 | `deploy/nginx-fri-dev.cloud.conf` | Server block nginx |
 
 ## Sekali saja di VPS
@@ -51,6 +54,7 @@ Tidak perlu restart nginx. Tekan Ctrl+F5 di browser bila perubahan CSS/JS belum 
 - **Menambah video:** salin `.mp4` (H.264 + AAC, di bawah ~100 MB) ke `videos/`, tambahkan/ubah entri di `assets/data/videos.js`. Entri dengan `file: null` tampil sebagai kartu "Segera hadir". Poster opsional di `assets/img/posters/`.
 - **Tombol "Buka MERCI":** isi `merciUrl` di `assets/js/config.js` setelah alamat produksi final. Selama kosong, tombolnya otomatis disembunyikan.
 - **Tangkapan layar baru:** letakkan PNG, jalankan `tools/optimize-shots.cjs` (butuh paket `sharp`), daftarkan nama dan ukurannya di `SHOT` pada `tools/build.cjs`.
+- **Tata cara (panduan terperinci mahasiswa, 11 halaman di `mahasiswa/tata-cara/`):** sumbernya folder mentah dari tim (`panduan_skta_mahasiswa/`, `panduan_pengganti_sidang_mahasiswa/`, `panduan_yudisium_mahasiswa/`, masing-masing berisi `.md`, `.pdf`, dan gambar; tidak ikut di-commit). Untuk menambah/memperbarui: taruh folder/berkasnya di root situs, daftarkan panduan baru di `tools/tata-cara.config.cjs` (slug, judul, ringkasan, kata kunci pencarian), lalu `node tools/import-tata-cara.cjs` (menyalin teks ke `content/tata-cara/`, PDF ke `assets/pdf/`, dan mengonversi gambar ke `assets/img/tata-cara/`), `node tools/build.cjs`, dan `bash deploy/publish.sh`. Format `.md` yang dipahami: judul `#`, baris `**Untuk:**` dan `**Alur:**`, kutipan `>`, daftar dokumen, `### Langkah N` + gambar, dan catatan penutup.
 
 ## Catatan
 

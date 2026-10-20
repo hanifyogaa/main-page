@@ -19,6 +19,11 @@ const bake = (html) => html
   .replace(/data-sijaki-link href="#"/g, `data-sijaki-link href="${SITE.sijakiUrl || '#'}"`)
   .replace(/data-onedesk-link href="#"/g, `data-onedesk-link href="${SITE.onedeskUrl || '#'}"`);
 
+/** The detailed guides (see tools/tata-cara.config.cjs and tools/import-tata-cara.cjs). */
+const TATA = require('./tata-cara.config.cjs');
+const TATA_IMG = JSON.parse(fs.readFileSync(path.join(OUT, 'content/tata-cara/images.json'), 'utf8'));
+const guideBySlug = Object.fromEntries(TATA.guides.map((g) => [g.slug, g]));
+
 /* ---------- icons (Lucide, stroke) ---------- */
 const svg = (inner, size = 22) =>
   `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
@@ -29,6 +34,7 @@ const ICON = {
   clipboard: svg('<rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/>', 24),
   presentation: svg('<path d="M2 3h20"/><path d="M21 3v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V3"/><path d="m7 21 5-5 5 5"/>', 24),
   briefcase: svg('<path d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><rect width="20" height="14" x="2" y="6" rx="2"/>', 24),
+  download: svg('<path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/>', 20),
   warn: svg('<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/>', 20),
 };
 
@@ -59,15 +65,21 @@ const callout = (kind, html) =>
   `<div class="callout ${kind}">${kind === 'warn' ? ICON.warn : ICON.info}<p>${html}</p></div>`;
 
 /** Every step gets an anchor id (`<stage>-<n>`) so the finder and the quick list can link straight to it. */
-function step(root, { title, text, shots = [], note }, id, keywords = '') {
+function step(root, { title, text, shots = [], note }, id, keywords = '', more = []) {
+  const moreLinks = more.length
+    ? `<p class="more">Tata cara lengkap: ${more.map((slug) => `<a href="tata-cara/${slug}/">${esc(guideBySlug[slug].title)}</a>`).join(' &middot; ')}</p>`
+    : '';
   return `<li class="step" id="${id}" data-keywords="${esc(keywords)}"><div><h3>${title}</h3><p>${text}</p>` +
-    (note ? note : '') +
+    moreLinks + (note ? note : '') +
     shots.map((s) => fig(root, ...s)).join('') + `</div></li>`;
 }
 
-function stage(root, { id, title, intro, steps, note, video }, keywords = {}) {
+/** `ctx.keywords` = extra search words per step id; `ctx.more` = detailed guide slugs linked under a step. */
+function stage(root, { id, title, intro, steps, note, video }, ctx = {}) {
+  const keywords = ctx.keywords || {};
+  const more = ctx.more || {};
   return `<section class="stage" id="${id}"${video ? ` data-video="${video}"` : ''} aria-labelledby="${id}-h"><header><h2 id="${id}-h">${title}</h2><p>${intro}</p>${note || ''}</header>` +
-    `<ol class="steps">${steps.map((s, i) => step(root, s, `${id}-${i + 1}`, keywords[`${id}-${i + 1}`])).join('')}</ol></section>`;
+    `<ol class="steps">${steps.map((s, i) => step(root, s, `${id}-${i + 1}`, keywords[`${id}-${i + 1}`], more[`${id}-${i + 1}`])).join('')}</ol></section>`;
 }
 
 /** "What do you want to do?" block: static shortcut cards (work without JavaScript); site.js adds the search box. */
@@ -77,11 +89,20 @@ function finder(stages, quick) {
     const st = stages.find((s) => s.id === sid.slice(0, k));
     return `${st.title} &middot; langkah ${sid.slice(k + 1)}`;
   };
+  /** A shortcut targets either an overview step id or `guide:<slug>` (a detailed guide page). */
+  const item = ([label, target]) => {
+    const text = label.replace(/SK-TA/g, '<span class="nb">SK-TA</span>');
+    if (target.startsWith('guide:')) {
+      const g = guideBySlug[target.slice(6)];
+      return `<li><a href="tata-cara/${g.slug}/"><b>${text}</b><span>Tata cara lengkap &middot; ${TATA.groups[g.group]}</span></a></li>`;
+    }
+    return `<li><a href="#${target}"><b>${text}</b><span>${hint(target)}</span></a></li>`;
+  };
   return `<section class="section finder" aria-labelledby="finder-h" data-finder><div class="wrap">
   <div class="section-head"><h2 id="finder-h">Anda ingin melakukan apa?</h2><p>Ketik kebutuhan Anda atau pilih salah satu di bawah. Anda akan diarahkan ke langkah panduan dan video yang sesuai.</p></div>
   <div data-finder-box></div>
   <div class="finder-results" data-finder-results aria-live="polite" hidden></div>
-  <ul class="quick" data-finder-quick>${quick.map(([label, sid]) => `<li><a href="#${sid}"><b>${label.replace(/SK-TA/g, '<span class="nb">SK-TA</span>')}</b><span>${hint(sid)}</span></a></li>`).join('')}</ul>
+  <ul class="quick" data-finder-quick>${quick.map(item).join('')}</ul>
 </div></section>`;
 }
 
@@ -89,6 +110,115 @@ const videoSection = (role, hintText) => `<section class="section" style="paddin
   <div class="section-head"><h2>Video tutorial</h2><p>${hintText}</p></div>
   <div class="videos videos--row" data-videos="${role}" data-carousel></div>
 </div></section>`;
+
+/* ---------- "tata cara" guides: markdown in content/tata-cara -> one page each ---------- */
+const inline = (s) => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+const shorten = (s, n) => (s.length <= n ? s : s.slice(0, n).replace(/\s+\S*$/, '') + '…');
+
+/** Reads the fixed layout of the team's guides: title, "Untuk/Alur", quotes, a document checklist, "### Langkah N" + image, closing notes. */
+function parseGuide(md) {
+  const g = { forWho: '', flow: '', notes: [], checklistHead: '', checklist: [], steps: [], after: [], closing: [] };
+  let cur = null;
+  let inList = false;
+  for (const raw of md.split('\n')) {
+    const line = raw.trim();
+    if (!line) continue;
+    let m;
+    if (/^# /.test(line) || line === 'Fakultas Rekayasa Industri - Telkom University') continue;
+    if ((m = line.match(/^\*\*Untuk:\*\*\s*(.+)/))) { g.forWho = m[1]; continue; }
+    if ((m = line.match(/^\*\*Alur:\*\*\s*(.+)/))) { g.flow = m[1]; continue; }
+    if (line.startsWith('> ')) { g.notes.push(line.slice(2)); continue; }
+    if (line === '---') { cur = null; inList = false; continue; }
+    if (/^\*\*Siapkan dokumen/.test(line)) { g.checklistHead = line; inList = true; continue; }
+    if (inList && line.startsWith('- ')) { g.checklist.push(line.slice(2)); continue; }
+    if ((m = line.match(/^### (.+)/))) {
+      cur = { heading: m[1], text: [], image: null };
+      (/^Langkah \d+$/.test(m[1]) ? g.steps : g.after).push(cur);
+      continue;
+    }
+    if ((m = line.match(/^!\[[^\]]*\]\(([^)]+)\)/))) { if (cur) cur.image = path.basename(m[1], path.extname(m[1])); continue; }
+    if (cur) cur.text.push(line); else g.closing.push(line);
+  }
+  return g;
+}
+
+const guideData = {};
+for (const g of TATA.guides) guideData[g.slug] = parseGuide(fs.readFileSync(path.join(OUT, 'content/tata-cara', `${g.slug}.md`), 'utf8'));
+
+function guideFig(name, alt) {
+  const dim = TATA_IMG[name];
+  if (!dim) throw new Error(`no image size for ${name}: run tools/import-tata-cara.cjs`);
+  return `<figure class="shot"><button type="button" aria-label="Perbesar tangkapan layar: ${esc(alt)}">` +
+    `<img src="../../../assets/img/tata-cara/${name}.webp" alt="${esc(alt)}" width="${dim[0]}" height="${dim[1]}" loading="lazy" decoding="async"></button></figure>`;
+}
+
+function guidePage(g) {
+  const R3 = '../../../';
+  const p = guideData[g.slug];
+  const pdfRel = `assets/pdf/tata-cara-${g.slug}.pdf`;
+  const pdfMb = (fs.statSync(path.join(OUT, pdfRel)).size / 1048576).toFixed(1).replace('.', ',');
+  const siblings = TATA.guides.filter((x) => x.group === g.group);
+  const at = siblings.findIndex((x) => x.slug === g.slug);
+  const label = TATA.groups[g.group];
+
+  const steps = p.steps.map((s, i) => {
+    const text = s.text.join(' ');
+    return `<li class="step" id="langkah-${i + 1}"><div><p>${inline(text)}</p>` +
+      (s.image ? guideFig(s.image, `Langkah ${i + 1}: ${shorten(text.replace(/\*\*/g, ''), 110)}`) : '') + `</div></li>`;
+  }).join('');
+
+  let checklist = '';
+  if (p.checklist.length) {
+    const m = p.checklistHead.match(/^\*\*(.+?)\*\*\s*(.*)$/);
+    checklist = `<section class="checklist" aria-labelledby="cl-h"><h2 id="cl-h">${esc(m[1])}</h2><p>${inline(m[2].replace(/:$/, ''))}</p>` +
+      `<ul>${p.checklist.map((c) => `<li>${inline(c)}</li>`).join('')}</ul></section>`;
+  }
+
+  const navCards = [];
+  if (at > 0) navCards.push(`<a class="guide-nav-card" href="../${siblings[at - 1].slug}/"><span>Sebelumnya</span><b>${esc(siblings[at - 1].title)}</b></a>`);
+  if (at < siblings.length - 1) navCards.push(`<a class="guide-nav-card" href="../${siblings[at + 1].slug}/"><span>Berikutnya</span><b>${esc(siblings[at + 1].title)}</b></a>`);
+  if (g.next && !(at < siblings.length - 1 && siblings[at + 1].slug === g.next)) {
+    navCards.push(`<a class="guide-nav-card" href="../${g.next}/"><span>Langkah selanjutnya</span><b>${esc(guideBySlug[g.next].title)}</b></a>`);
+  }
+
+  page({
+    root: R3, file: `mahasiswa/tata-cara/${g.slug}/index.html`,
+    title: `${g.title} — Tata cara mahasiswa — MERCI-FRI`,
+    description: `${g.summary} Panduan bergambar ${p.steps.length} langkah, dapat diunduh sebagai PDF.`,
+    current: 'mahasiswa/',
+    body: `
+<section class="hero hero--left"><div class="wrap">
+  <nav class="crumbs" aria-label="Jejak halaman"><a href="../../">Mahasiswa</a> / <a href="../../#tata-cara">Tata cara</a> / <span aria-current="page">${esc(g.title)}</span></nav>
+  <span class="eyebrow">Tata cara &middot; ${esc(label)}</span>
+  <h1>${esc(g.title)}</h1>
+  <p class="lead">${inline(p.forWho)}</p>
+  ${p.flow ? `<p class="flow"><b>Alur:</b> ${inline(p.flow)}</p>` : ''}
+  <div class="guide-actions"><a class="btn" style="background:var(--brand);color:#fff" href="${R3}${pdfRel}" download>${ICON.download}Unduh PDF (${pdfMb} MB)</a></div>
+</div></section>
+<div class="wrap"><div class="guide-body">
+  ${p.notes.map((n) => callout('note', inline(n))).join('')}
+  ${checklist}
+  <ol class="steps steps--guide">${steps}</ol>
+  ${p.after.map((a) => callout('note', `<b>${esc(a.heading)}.</b> ${inline(a.text.join(' '))}`)).join('')}
+  ${p.closing.map((c) => callout('note', inline(c))).join('')}
+  <nav class="guide-nav" aria-label="Panduan lainnya">${navCards.join('')}<a class="guide-nav-card" href="../../#tata-cara"><span>Kembali</span><b>Semua tata cara</b></a></nav>
+</div></div>`,
+  });
+}
+
+/** "Tata cara lengkap" on the mahasiswa page: the guide cards by group (also picked up by the finder's search). */
+function tataCaraSection() {
+  const groups = Object.entries(TATA.groups).map(([key, label]) => {
+    const cards = TATA.guides.filter((g) => g.group === key).map((g) =>
+      `<li><a class="guide-card" href="tata-cara/${g.slug}/" data-group="${esc(label)}" data-keywords="${esc(g.keywords)}">` +
+      `<b>${esc(g.title).replace(/SK-TA/g, '<span class="nb">SK-TA</span>')}</b><span>${esc(g.summary).replace(/SK-TA/g, '<span class="nb">SK-TA</span>')}</span><em>${guideData[g.slug].steps.length} langkah &middot; ada PDF</em></a></li>`).join('');
+    return `<h3 class="guides-h" id="tata-cara-${key}">${esc(label)}</h3><ul class="quick guides">${cards}</ul>`;
+  }).join('');
+  return `<section class="section" id="tata-cara" aria-labelledby="tata-cara-h"><div class="wrap">
+  <div class="section-head"><h2 id="tata-cara-h">Tata cara lengkap</h2><p>Panduan bergambar langkah demi langkah untuk tiap jalur. Masing-masing bisa diunduh sebagai PDF.</p></div>
+  ${groups}
+</div></section>`;
+}
 
 /* ---------- page shell ---------- */
 /** `brand: 'fri'` swaps the MERCI logo for the faculty logo (the home page covers Tugas Akhir in general, incl. SOFI). */
@@ -303,15 +433,23 @@ const mahasiswaKeywords = {
   'data-diri-2': 'panduan pengguna bantuan fitur',
 };
 const mahasiswaQuick = [
-  ['Belum punya pembimbing', 'sk-ta-3'],
-  ['Mengajukan SK-TA', 'sk-ta-4'],
-  ['Mengecek status SK-TA', 'sk-ta-5'],
+  ['Belum punya pembimbing', 'guide:pengajuan-pembimbing'],
+  ['Mengajukan SK-TA', 'guide:pembuatan-awal'],
+  ['Memperpanjang SK-TA', 'guide:perpanjangan-1-2'],
+  ['Mengganti pembimbing', 'guide:pergantian-pembimbing'],
   ['Mendaftar Pengganti Sidang', 'pengganti-sidang-1'],
-  ['Membalas catatan revisi', 'pengganti-sidang-3'],
-  ['Mengunggah dokumen Yudisium', 'yudisium-2'],
+  ['Mendaftar Yudisium', 'guide:yudisium-reguler'],
   ['Memilih jalur cumlaude', 'yudisium-3'],
   ['Mengunduh SKL dan KHS', 'skl-khs-2'],
 ];
+/** Detailed guides linked under the matching overview step. */
+const mahasiswaMore = {
+  'sk-ta-3': ['pengajuan-pembimbing'],
+  'sk-ta-4': ['pembuatan-awal', 'perpanjangan-1-2', 'perpanjangan-lebih-2', 'pergantian-pembimbing'],
+  'pengganti-sidang-1': ['pengganti-sidang-konferensi', 'pengganti-sidang-jurnal'],
+  'yudisium-2': ['yudisium-reguler'],
+  'yudisium-3': ['yudisium-cumlaude-publikasi', 'yudisium-cumlaude-lomba', 'yudisium-cumlaude-hki'],
+};
 
 page({
   root: R, file: 'mahasiswa/index.html',
@@ -327,11 +465,14 @@ page({
 </div></section>
 ${finder(mahasiswaStages, mahasiswaQuick)}
 ${videoSection('mahasiswa', 'Geser ke kanan untuk melihat video lainnya.')}
+${tataCaraSection()}
 <div class="wrap"><div class="layout">
-  <aside class="toc" aria-label="Isi halaman"><h2>Isi halaman</h2><ol>${mahasiswaStages.map((s) => `<li><a href="#${s.id}">${s.title}</a></li>`).join('')}</ol></aside>
-  <div>${mahasiswaStages.map((s) => stage(R, s, mahasiswaKeywords)).join('')}</div>
+  <aside class="toc" aria-label="Isi halaman"><h2>Isi halaman</h2><ol><li><a href="#tata-cara">Tata cara lengkap</a></li>${mahasiswaStages.map((s) => `<li><a href="#${s.id}">${s.title}</a></li>`).join('')}</ol></aside>
+  <div>${mahasiswaStages.map((s) => stage(R, s, { keywords: mahasiswaKeywords, more: mahasiswaMore })).join('')}</div>
 </div></div>`,
 });
+
+TATA.guides.forEach(guidePage);
 
 /* ======================================================================
    DOSEN
@@ -430,7 +571,7 @@ ${finder(dosenStages, dosenQuick)}
 ${videoSection('dosen', 'Tonton video pengantar untuk dosen.')}
 <div class="wrap"><div class="layout">
   <aside class="toc" aria-label="Isi halaman"><h2>Isi halaman</h2><ol>${dosenStages.map((s) => `<li><a href="#${s.id}">${s.title}</a></li>`).join('')}</ol></aside>
-  <div>${dosenStages.map((s) => stage(R, s, dosenKeywords)).join('')}</div>
+  <div>${dosenStages.map((s) => stage(R, s, { keywords: dosenKeywords })).join('')}</div>
 </div></div>`,
 });
 

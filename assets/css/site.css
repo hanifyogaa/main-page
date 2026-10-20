@@ -159,6 +159,34 @@ p { margin: 0 0 1em; }
 .quick b .nb { display: inline; font-size: inherit; color: inherit; white-space: nowrap; }
 .step:target { outline: 2px solid var(--brand-600); outline-offset: 10px; border-radius: 12px; }
 
+/* ---------- detailed guides ("tata cara") ---------- */
+.hero--left { text-align: left; padding-bottom: 8px; }
+.hero--left .lead { margin-left: 0; }
+.crumbs { font-size: .9rem; color: var(--muted); margin-bottom: 14px; }
+.crumbs a { color: var(--muted); }
+.flow { max-width: 760px; color: var(--muted); }
+.guide-actions { margin-top: 18px; display: flex; gap: 10px; flex-wrap: wrap; }
+.btn svg { margin-right: 8px; flex-shrink: 0; }
+.guide-body { max-width: 860px; padding-bottom: 24px; }
+.quick span .nb, .guide-card span .nb { display: inline; font-size: inherit; color: inherit; white-space: nowrap; }
+.guide-body .callout { margin-bottom: 14px; }
+.checklist { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 24px; margin: 18px 0 30px; box-shadow: var(--shadow); }
+.checklist h2 { font-size: 1.15rem; margin-bottom: 4px; }
+.checklist p { color: var(--muted); font-size: .92rem; margin-bottom: 10px; }
+.checklist ul { margin: 0; padding-left: 1.2rem; columns: 2; column-gap: 32px; }
+.checklist li { margin-bottom: 6px; break-inside: avoid; }
+.steps--guide { margin: 28px 0; }
+.steps--guide .step p { color: var(--ink); }
+.guides-h { margin: 26px 0 0; }
+.quick em { display: block; margin-top: 6px; font-style: normal; font-size: .8rem; font-weight: 600; color: var(--brand); }
+.more { font-size: .92rem; margin: -4px 0 12px; }
+.guide-nav { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin: 36px 0 12px; }
+.guide-nav-card { display: block; padding: 14px 16px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; text-decoration: none; color: var(--ink); }
+.guide-nav-card:hover { border-color: var(--brand-600); }
+.guide-nav-card span { display: block; font-size: .8rem; color: var(--muted); }
+.guide-nav-card b { display: block; font-weight: 600; }
+@media (max-width: 640px) { .checklist ul { columns: 1; } }
+
 /* ---------- role pages ---------- */
 .layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 40px; align-items: start; }
 .toc { position: sticky; top: 88px; padding: 16px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }

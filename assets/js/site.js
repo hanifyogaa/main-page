@@ -161,6 +161,7 @@
       var title = li.querySelector('h3').textContent;
       return {
         id: li.id,
+        href: '#' + li.id,
         title: title,
         stage: stageEl.querySelector('h2').textContent,
         n: li.id.slice(li.id.lastIndexOf('-') + 1),
@@ -173,6 +174,23 @@
     });
     var byId = {};
     steps.forEach(function (s) { byId[s.id] = s; });
+
+    /* The detailed guide cards are searchable too; they open their own page. */
+    [].forEach.call(document.querySelectorAll('.guide-card'), function (a) {
+      var gTitle = a.querySelector('b').textContent;
+      var gGroup = a.getAttribute('data-group') || '';
+      steps.push({
+        guide: true,
+        href: a.getAttribute('href'),
+        title: gTitle,
+        stage: gGroup,
+        video: null,
+        nTitle: norm(gTitle),
+        nStage: norm(gGroup),
+        nKeywords: norm(a.getAttribute('data-keywords')),
+        nText: norm(a.querySelector(':scope > span').textContent)
+      });
+    });
 
     function search(q) {
       var tokens = norm(q).split(' ').filter(function (t) { return t && STOP.indexOf(t) === -1; });
@@ -191,10 +209,10 @@
           if (!best) { return; }
           score += best;
         }
-        found.push({ s: s, score: score });
+        found.push({ s: s, score: score + (s.guide ? 3 : 0) });
       });
       found.sort(function (a, b) { return b.score - a.score; });
-      return found.slice(0, 6);
+      return found.slice(0, 8);
     }
 
     function videoHint(s) {
@@ -239,11 +257,11 @@
         var li = document.createElement('li');
         var a = document.createElement('a');
         a.className = 'result';
-        a.href = '#' + r.s.id;
+        a.href = r.s.href;
         var b = document.createElement('b');
         b.textContent = r.s.title;
         var span = document.createElement('span');
-        span.textContent = r.s.stage + ' · langkah ' + r.s.n;
+        span.textContent = r.s.guide ? 'Tata cara lengkap · ' + r.s.stage : r.s.stage + ' · langkah ' + r.s.n;
         a.appendChild(b);
         a.appendChild(span);
         li.appendChild(a);

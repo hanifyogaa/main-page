@@ -1,3 +1,5 @@
+# raw "tata cara" folders from the team (PNG, duplicate zips): tools/import-tata-cara.cjs turns them into content/ + assets/
+panduan_*/
 deploy/publish.env
 node_modules/
 *.zip
