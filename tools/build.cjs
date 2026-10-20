@@ -54,16 +54,37 @@ function fig(root, name, alt, caption) {
 const callout = (kind, html) =>
   `<div class="callout ${kind}">${kind === 'warn' ? ICON.warn : ICON.info}<p>${html}</p></div>`;
 
-function step(root, { title, text, shots = [], note }) {
-  return `<li class="step"><div><h3>${title}</h3><p>${text}</p>` +
+/** Every step gets an anchor id (`<stage>-<n>`) so the finder and the quick list can link straight to it. */
+function step(root, { title, text, shots = [], note }, id, keywords = '') {
+  return `<li class="step" id="${id}" data-keywords="${esc(keywords)}"><div><h3>${title}</h3><p>${text}</p>` +
     (note ? note : '') +
     shots.map((s) => fig(root, ...s)).join('') + `</div></li>`;
 }
 
-function stage(root, { id, title, intro, steps, note }) {
-  return `<section class="stage" id="${id}" aria-labelledby="${id}-h"><header><h2 id="${id}-h">${title}</h2><p>${intro}</p>${note || ''}</header>` +
-    `<ol class="steps">${steps.map((s) => step(root, s)).join('')}</ol></section>`;
+function stage(root, { id, title, intro, steps, note, video }, keywords = {}) {
+  return `<section class="stage" id="${id}"${video ? ` data-video="${video}"` : ''} aria-labelledby="${id}-h"><header><h2 id="${id}-h">${title}</h2><p>${intro}</p>${note || ''}</header>` +
+    `<ol class="steps">${steps.map((s, i) => step(root, s, `${id}-${i + 1}`, keywords[`${id}-${i + 1}`])).join('')}</ol></section>`;
 }
+
+/** "What do you want to do?" block: static shortcut cards (work without JavaScript); site.js adds the search box. */
+function finder(stages, quick) {
+  const hint = (sid) => {
+    const k = sid.lastIndexOf('-');
+    const st = stages.find((s) => s.id === sid.slice(0, k));
+    return `${st.title} &middot; langkah ${sid.slice(k + 1)}`;
+  };
+  return `<section class="section finder" aria-labelledby="finder-h" data-finder><div class="wrap">
+  <div class="section-head"><h2 id="finder-h">Anda ingin melakukan apa?</h2><p>Ketik kebutuhan Anda atau pilih salah satu di bawah. Anda akan diarahkan ke langkah panduan dan video yang sesuai.</p></div>
+  <div data-finder-box></div>
+  <div class="finder-results" data-finder-results aria-live="polite" hidden></div>
+  <ul class="quick" data-finder-quick>${quick.map(([label, sid]) => `<li><a href="#${sid}"><b>${label.replace(/SK-TA/g, '<span class="nb">SK-TA</span>')}</b><span>${hint(sid)}</span></a></li>`).join('')}</ul>
+</div></section>`;
+}
+
+const videoSection = (role, hintText) => `<section class="section" style="padding-top:8px"><div class="wrap">
+  <div class="section-head"><h2>Video tutorial</h2><p>${hintText}</p></div>
+  <div class="videos videos--row" data-videos="${role}" data-carousel></div>
+</div></section>`;
 
 /* ---------- page shell ---------- */
 function page({ root, file, title, description, current, body }) {
@@ -179,7 +200,7 @@ page({
 const R = '../';
 const mahasiswaStages = [
   {
-    id: 'sk-ta', title: '1 · SK-TA',
+    id: 'sk-ta', title: '1 · SK-TA', video: 'mahasiswa-tutorial-skta',
     intro: 'Mulai dari pembimbing dan Surat Keputusan Tugas Akhir. Semua pengajuan dan statusnya ada di satu halaman.',
     steps: [
       { title: 'Masuk dengan akun iGracias', text: 'Buka MERCI lalu masuk memakai username dan password iGracias Anda (SSO Telkom University). Tidak ada akun terpisah untuk dibuat.',
@@ -208,7 +229,7 @@ const mahasiswaStages = [
     ],
   },
   {
-    id: 'yudisium', title: '3 · Yudisium',
+    id: 'yudisium', title: '3 · Yudisium', video: 'mahasiswa-tutorial-yudisium',
     intro: 'Daftar Yudisium setelah sidang dinyatakan lulus dan seluruh revisi selesai.',
     note: callout('note', '<b>Syarat:</b> periode Yudisium dibuka, sidang dinyatakan lulus, dan seluruh revisi selesai.'),
     steps: [
@@ -247,6 +268,37 @@ const mahasiswaStages = [
   },
 ];
 
+/** Extra search words per step id (synonyms and the words a student would actually type). */
+const mahasiswaKeywords = {
+  'sk-ta-1': 'login masuk akun sso igracias username password',
+  'sk-ta-2': 'dashboard beranda tahap status periode',
+  'sk-ta-3': 'pembimbing dosen pembimbing belum punya belum diplot plotting kelompok keahlian peminatan luar kampus eksternal biodata',
+  'sk-ta-4': 'sk ta surat keputusan tugas akhir ajukan pengajuan permohonan whatsapp wa template pdf unggah upload',
+  'sk-ta-5': 'status refresh data igracias disetujui menunggu review diproses terbit sk aktif',
+  'pengganti-sidang-1': 'daftar pendaftaran jurnal konferensi publikasi sidang pengganti periode unggah dokumen link google drive sidang ta',
+  'pengganti-sidang-2': 'verifikasi jadwal penilaian tim penilai penguji status nilai',
+  'pengganti-sidang-3': 'revisi perbaikan catatan balas berkas perbaikan unggah revisi',
+  'yudisium-1': 'cek status syarat pendaftaran yudisium dibuka periode batas waktu',
+  'yudisium-2': 'dokumen unggah upload kategori a b c d berkas pusat unggah dokumen persyaratan',
+  'yudisium-3': 'cumlaude jalur publikasi lomba hki predikat kategori d',
+  'yudisium-4': 'kirim submit pendaftaran verifikasi admin dokumen ditolak perbaikan unggah ulang',
+  'yudisium-5': 'sesi yudisium pengumuman hasil predikat tunggu',
+  'skl-khs-1': 'hasil lulus diumumkan notifikasi dashboard',
+  'skl-khs-2': 'unduh download skl khs surat keterangan lulus kartu hasil studi',
+  'data-diri-1': 'profil data akademik ipk sks eprt tak nik nama tanggal lahir koreksi data salah',
+  'data-diri-2': 'panduan pengguna bantuan fitur',
+};
+const mahasiswaQuick = [
+  ['Belum punya pembimbing', 'sk-ta-3'],
+  ['Mengajukan SK-TA', 'sk-ta-4'],
+  ['Mengecek status SK-TA', 'sk-ta-5'],
+  ['Mendaftar Pengganti Sidang', 'pengganti-sidang-1'],
+  ['Membalas catatan revisi', 'pengganti-sidang-3'],
+  ['Mengunggah dokumen Yudisium', 'yudisium-2'],
+  ['Memilih jalur cumlaude', 'yudisium-3'],
+  ['Mengunduh SKL dan KHS', 'skl-khs-2'],
+];
+
 page({
   root: R, file: 'mahasiswa/index.html',
   title: 'Panduan Mahasiswa — MERCI-FRI',
@@ -259,10 +311,11 @@ page({
   <p class="lead" style="margin-left:0">Ikuti empat tahap berurutan. Klik gambar mana pun untuk memperbesarnya.</p>
   <a class="btn" style="background:var(--brand);color:#fff" data-merci-link href="#"><span class="chip"><img src="${R}assets/img/merci-icon.png" alt="" width="20" height="12"></span>Buka MERCI</a>
 </div></section>
-<section class="section" style="padding-top:8px"><div class="wrap"><div class="videos" data-videos="mahasiswa"></div></div></section>
+${finder(mahasiswaStages, mahasiswaQuick)}
+${videoSection('mahasiswa', 'Geser ke kanan untuk melihat video lainnya.')}
 <div class="wrap"><div class="layout">
   <aside class="toc" aria-label="Isi halaman"><h2>Isi halaman</h2><ol>${mahasiswaStages.map((s) => `<li><a href="#${s.id}">${s.title}</a></li>`).join('')}</ol></aside>
-  <div>${mahasiswaStages.map((s) => stage(R, s)).join('')}</div>
+  <div>${mahasiswaStages.map((s) => stage(R, s, mahasiswaKeywords)).join('')}</div>
 </div></div>`,
 });
 
@@ -327,6 +380,26 @@ const dosenStages = [
   },
 ];
 
+const dosenKeywords = {
+  'ringkasan-1': 'dashboard tugas ringkasan persetujuan sidang nilai belum masuk',
+  'ringkasan-2': 'mahasiswa bimbingan daftar pantau tahap berkas advisee',
+  'persetujuan-1': 'persetujuan pembimbing 2 setujui tolak approve pendaftaran',
+  'pengganti-sidang-1': 'daftar pengganti sidang jurnal konferensi publikasi',
+  'pengganti-sidang-2': 'nilai penilaian rubrik revisi butir tutup selesai tenggat perpanjang penguji ketua',
+  'dokumen-1': 'dokumen sidang nota dinas berita acara bap lembar nilai unduh download',
+  'penjadwalan-1': 'jadwal penjadwalan scheduler kk panel penilai ruang tanggal',
+  'profil-1': 'profil whatsapp nomor wa kontak',
+  'profil-2': 'panduan pengguna bantuan fitur',
+};
+const dosenQuick = [
+  ['Menyetujui Pembimbing 2', 'persetujuan-1'],
+  ['Menilai dan menulis revisi', 'pengganti-sidang-2'],
+  ['Memantau mahasiswa bimbingan', 'ringkasan-2'],
+  ['Mengunduh dokumen sidang', 'dokumen-1'],
+  ['Menyusun jadwal (scheduler KK)', 'penjadwalan-1'],
+  ['Melengkapi profil dan WhatsApp', 'profil-1'],
+];
+
 page({
   root: R, file: 'dosen/index.html',
   title: 'Panduan Dosen — MERCI-FRI',
@@ -339,10 +412,11 @@ page({
   <p class="lead" style="margin-left:0">Dari menyetujui pendaftaran sampai menutup revisi. Klik gambar mana pun untuk memperbesarnya.</p>
   <a class="btn" style="background:var(--brand);color:#fff" data-merci-link href="#"><span class="chip"><img src="${R}assets/img/merci-icon.png" alt="" width="20" height="12"></span>Buka MERCI</a>
 </div></section>
-<section class="section" style="padding-top:8px"><div class="wrap"><div class="videos" data-videos="dosen"></div></div></section>
+${finder(dosenStages, dosenQuick)}
+${videoSection('dosen', 'Tonton video pengantar untuk dosen.')}
 <div class="wrap"><div class="layout">
   <aside class="toc" aria-label="Isi halaman"><h2>Isi halaman</h2><ol>${dosenStages.map((s) => `<li><a href="#${s.id}">${s.title}</a></li>`).join('')}</ol></aside>
-  <div>${dosenStages.map((s) => stage(R, s)).join('')}</div>
+  <div>${dosenStages.map((s) => stage(R, s, dosenKeywords)).join('')}</div>
 </div></div>`,
 });
 

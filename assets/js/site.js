@@ -30,6 +30,7 @@
     list.forEach(function (v) {
       var card = document.createElement('article');
       card.className = 'video-card' + (v.file ? '' : ' soon');
+      card.setAttribute('data-video-id', v.id);
 
       if (v.file) {
         var video = document.createElement('video');
@@ -64,6 +65,196 @@
 
     if (!list.length) { host.hidden = true; }
   });
+
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var CHEVRON = {
+    '-1': '<path d="m15 18-6-6 6-6"/>',
+    '1': '<path d="m9 18 6-6-6-6"/>'
+  };
+
+  /* Video row that scrolls sideways, with previous/next buttons (hidden when everything already fits). */
+  document.querySelectorAll('[data-carousel]').forEach(function (row) {
+    if (row.hidden) { return; }
+    row.setAttribute('tabindex', '0');
+    row.setAttribute('role', 'region');
+    row.setAttribute('aria-label', 'Daftar video tutorial, geser untuk melihat lainnya');
+
+    var nav = document.createElement('div');
+    nav.className = 'carousel-nav';
+    ['-1', '1'].forEach(function (dir) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.setAttribute('data-dir', dir);
+      b.setAttribute('aria-label', dir === '-1' ? 'Video sebelumnya' : 'Video berikutnya');
+      b.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + CHEVRON[dir] + '</svg>';
+      nav.appendChild(b);
+    });
+    row.parentNode.insertBefore(nav, row);
+    var prev = nav.children[0];
+    var next = nav.children[1];
+
+    function update() {
+      var max = row.scrollWidth - row.clientWidth;
+      nav.hidden = max <= 4;
+      prev.disabled = row.scrollLeft <= 4;
+      next.disabled = row.scrollLeft >= max - 4;
+    }
+    nav.addEventListener('click', function (e) {
+      var b = e.target.closest('button');
+      if (!b) { return; }
+      var card = row.querySelector('.video-card');
+      var gap = parseFloat(window.getComputedStyle(row).columnGap) || 18;
+      var by = (card ? card.getBoundingClientRect().width + gap : row.clientWidth) * Number(b.getAttribute('data-dir'));
+      row.scrollBy({ left: by, behavior: reduceMotion ? 'auto' : 'smooth' });
+    });
+    row.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  });
+
+  /* Bring a video card into view and give it a short highlight. */
+  function goToVideo(id) {
+    var card = document.querySelector('.video-card[data-video-id="' + id + '"]');
+    if (!card) { return; }
+    card.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'nearest', inline: 'start' });
+    card.classList.add('flash');
+    window.setTimeout(function () { card.classList.remove('flash'); }, 1800);
+    var video = card.querySelector('video');
+    if (video) { video.focus({ preventScroll: true }); }
+  }
+
+  /* "Anda ingin melakukan apa?": the shortcut cards are plain links; this adds the search box and the video hints. */
+  var finder = document.querySelector('[data-finder]');
+  if (finder) {
+    var box = finder.querySelector('[data-finder-box]');
+    var out = finder.querySelector('[data-finder-results]');
+    var quick = finder.querySelector('[data-finder-quick]');
+    box.innerHTML = '<label class="finder-label" for="finder-q">Cari kebutuhan Anda</label>' +
+      '<input id="finder-q" type="search" autocomplete="off" placeholder="Contoh: ajukan pembimbing, unggah dokumen, unduh SKL">';
+    var input = box.querySelector('input');
+
+    function norm(s) {
+      return (s || '').toLowerCase().replace(/[^a-z0-9\s]/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+    var STOP = ['saya', 'aku', 'mau', 'ingin', 'cara', 'bagaimana', 'gimana', 'untuk', 'yang', 'di', 'ke', 'dan', 'atau', 'dari', 'apa', 'bisa', 'tolong', 'akan', 'dengan', 'itu', 'ini'];
+
+    /* Light Indonesian affix stripping so "mengajukan" finds "ajukan" and "mengunggah" finds "unggah". */
+    function variants(t) {
+      var v = [t];
+      var m = t.replace(/^(meng|meny|mem|men|me|peng|pem|pen|pe|ber|ter|di|ke|se)/, '');
+      if (m !== t && m.length > 3) {
+        v.push(m);
+        if (/^meng/.test(t)) { v.push('k' + m); }
+        if (/^mem/.test(t)) { v.push('p' + m); }
+        if (/^men/.test(t) && !/^meng|^meny/.test(t)) { v.push('t' + m); }
+        if (/^meny/.test(t)) { v.push('s' + m); }
+      }
+      v.slice().forEach(function (x) {
+        var y = x.replace(/(kan|an|i|nya)$/, '');
+        if (y !== x && y.length > 3) { v.push(y); }
+      });
+      return v;
+    }
+
+    var steps = [].map.call(document.querySelectorAll('.stage .step'), function (li) {
+      var stageEl = li.closest('.stage');
+      var title = li.querySelector('h3').textContent;
+      return {
+        id: li.id,
+        title: title,
+        stage: stageEl.querySelector('h2').textContent,
+        n: li.id.slice(li.id.lastIndexOf('-') + 1),
+        video: stageEl.getAttribute('data-video'),
+        nTitle: norm(title),
+        nStage: norm(stageEl.querySelector('h2').textContent),
+        nKeywords: norm(li.getAttribute('data-keywords')),
+        nText: norm(li.querySelector('p').textContent)
+      };
+    });
+    var byId = {};
+    steps.forEach(function (s) { byId[s.id] = s; });
+
+    function search(q) {
+      var tokens = norm(q).split(' ').filter(function (t) { return t && STOP.indexOf(t) === -1; });
+      if (!tokens.length) { return null; }
+      var found = [];
+      steps.forEach(function (s) {
+        var score = 0;
+        for (var i = 0; i < tokens.length; i++) {
+          var best = 0;
+          variants(tokens[i]).forEach(function (t) {
+            var w = s.nTitle.indexOf(t) !== -1 ? 3 :
+              (s.nKeywords.indexOf(t) !== -1 || s.nStage.indexOf(t) !== -1) ? 2 :
+              s.nText.indexOf(t) !== -1 ? 1 : 0;
+            if (w > best) { best = w; }
+          });
+          if (!best) { return; }
+          score += best;
+        }
+        found.push({ s: s, score: score });
+      });
+      found.sort(function (a, b) { return b.score - a.score; });
+      return found.slice(0, 6);
+    }
+
+    function videoHint(s) {
+      if (!s || !s.video) { return null; }
+      var v = (window.TUTORIAL_VIDEOS || []).filter(function (x) { return x.id === s.video; })[0];
+      if (!v) { return null; }
+      var el = document.createElement('div');
+      el.className = 'video-hint';
+      if (v.file) {
+        var b = document.createElement('button');
+        b.type = 'button';
+        b.textContent = 'Tonton video: ' + v.title;
+        b.addEventListener('click', function () { goToVideo(v.id); });
+        el.appendChild(b);
+      } else {
+        el.textContent = 'Video tutorial: segera hadir';
+      }
+      return el;
+    }
+
+    quick.querySelectorAll('li').forEach(function (li) {
+      var a = li.querySelector('a');
+      var hint = videoHint(byId[a.getAttribute('href').slice(1)]);
+      if (hint) { li.appendChild(hint); }
+    });
+
+    function render(q) {
+      var results = search(q);
+      out.textContent = '';
+      if (results === null) { out.hidden = true; quick.hidden = false; return; }
+      quick.hidden = true;
+      out.hidden = false;
+      var count = document.createElement('p');
+      count.className = 'finder-count';
+      count.textContent = results.length ?
+        results.length + ' langkah yang cocok dengan "' + q.trim() + '"' :
+        'Tidak ada yang cocok dengan "' + q.trim() + '". Coba kata lain, atau buka halaman Bantuan untuk pertanyaan umum.';
+      out.appendChild(count);
+      var ul = document.createElement('ul');
+      ul.className = 'results';
+      results.forEach(function (r) {
+        var li = document.createElement('li');
+        var a = document.createElement('a');
+        a.className = 'result';
+        a.href = '#' + r.s.id;
+        var b = document.createElement('b');
+        b.textContent = r.s.title;
+        var span = document.createElement('span');
+        span.textContent = r.s.stage + ' · langkah ' + r.s.n;
+        a.appendChild(b);
+        a.appendChild(span);
+        li.appendChild(a);
+        var hint = videoHint(r.s);
+        if (hint) { li.appendChild(hint); }
+        ul.appendChild(li);
+      });
+      out.appendChild(ul);
+    }
+    input.addEventListener('input', function () { render(input.value); });
+  }
 
   /* Screenshot lightbox. */
   var dialog = document.createElement('dialog');

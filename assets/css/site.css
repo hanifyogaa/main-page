@@ -120,6 +120,33 @@ p { margin: 0 0 1em; }
 .badge { display: block; font-size: .78rem; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--brand); margin-bottom: 6px; }
 .video-card.soon { display: grid; place-items: center; min-height: 260px; text-align: center; border-style: dashed; background: rgba(255, 255, 255, .6); box-shadow: none; }
 .video-card.soon .meta { padding: 24px; }
+.video-card.flash { box-shadow: 0 0 0 3px var(--brand-600), var(--shadow); }
+
+/* ---------- video row (scrolls sideways) ---------- */
+.videos--row { display: flex; gap: 18px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 4px 2px 16px; scrollbar-width: thin; overscroll-behavior-x: contain; }
+.videos--row .video-card { flex: 0 0 min(440px, 86%); scroll-snap-align: start; }
+.carousel-nav { display: flex; justify-content: flex-end; gap: 8px; margin: -8px 0 8px; }
+.carousel-nav button { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--surface); color: var(--brand); display: grid; place-items: center; cursor: pointer; }
+.carousel-nav button:hover:not(:disabled) { background: var(--brand-50); border-color: var(--brand-600); }
+.carousel-nav button:disabled { opacity: .4; cursor: default; }
+
+/* ---------- "Anda ingin melakukan apa?" ---------- */
+.finder .section-head { margin-bottom: 14px; }
+.finder-label { display: block; font-weight: 600; font-size: .9rem; margin-bottom: 6px; }
+.finder input[type="search"] { width: 100%; max-width: 640px; min-height: 48px; padding: 0 16px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--ink); font: inherit; }
+.quick, .results { list-style: none; margin: 18px 0 0; padding: 0; display: grid; gap: 12px; }
+.quick { grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); }
+.results { max-width: 760px; margin-top: 12px; }
+.quick li, .results li { display: flex; flex-direction: column; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
+.quick li:hover, .results li:hover { border-color: var(--brand-600); }
+.quick a, .result { flex: 1; display: block; padding: 14px 16px; text-decoration: none; color: var(--ink); }
+.quick b, .result b { display: block; font-weight: 600; }
+.quick span, .result span { display: block; font-size: .86rem; color: var(--muted); }
+.video-hint { padding: 0 16px 6px; font-size: .88rem; color: var(--muted); }
+.video-hint button { padding: 10px 0; border: 0; background: none; color: var(--brand); font: inherit; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.finder-count { margin: 12px 0 0; color: var(--muted); }
+.quick b .nb { display: inline; font-size: inherit; color: inherit; white-space: nowrap; }
+.step:target { outline: 2px solid var(--brand-600); outline-offset: 10px; border-radius: 12px; }
 
 /* ---------- role pages ---------- */
 .layout { display: grid; grid-template-columns: 240px minmax(0, 1fr); gap: 40px; align-items: start; }
@@ -212,6 +239,10 @@ dialog.lightbox button {
 @media (max-width: 640px) {
   .role-cards { grid-template-columns: minmax(0, 1fr); }
   .brand span { display: none; }
+  .quick { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .quick a { padding: 12px; }
+  .quick b { font-size: .95rem; line-height: 1.3; }
+  .quick .video-hint { padding: 0 12px 4px; }
   .nav a { padding: 0 10px; font-size: .9rem; }
   .step { grid-template-columns: 32px minmax(0, 1fr); gap: 10px; }
   .step::before { width: 30px; height: 30px; font-size: .85rem; }
