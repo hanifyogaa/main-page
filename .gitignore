@@ -1,0 +1,3 @@
+deploy/publish.env
+node_modules/
+*.zip
